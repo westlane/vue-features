@@ -1,0 +1,93 @@
+import { describe, expect, it } from 'vitest'
+import { effectScope, nextTick, ref } from 'vue'
+import { FeatureEvents, type FeatureEventBus } from '../src/types'
+import { useBroadcastHostContext } from '../src/use-broadcast-host-context'
+import { useFeatureInstanceRegistry } from '../src/use-feature-instance-registry'
+import { useFeatureMountLifecycle } from '../src/use-feature-mount-lifecycle'
+
+function createTestBus(): FeatureEventBus & { log: { event: string; payload: unknown }[] } {
+  const handlers = new Map<string, Set<(data: unknown) => void>>()
+  const log: { event: string; payload: unknown }[] = []
+  return {
+    log,
+    on(eventName, listener) {
+      const set = handlers.get(eventName) ?? new Set()
+      set.add(listener as (data: unknown) => void)
+      handlers.set(eventName, set)
+    },
+    off(eventName, listener) {
+      const set = handlers.get(eventName)
+      if (!set) return
+      if (listener) set.delete(listener as (data: unknown) => void)
+      else handlers.delete(eventName)
+    },
+    emit(eventName, data = {}) {
+      log.push({ event: eventName, payload: data })
+      handlers.get(eventName)?.forEach((listener) => listener({ ...data }))
+      return true
+    },
+  }
+}
+
+function mount(id: string, featureKey = 'export', tag = 'app-export') {
+  return { id, featureKey, tag, spec: {}, hostContext: { writeEnabled: true } }
+}
+
+describe('host feature lifecycle', () => {
+  it('emits mounting and unmounting when launch mounts change', async () => {
+    const bus = createTestBus()
+    const launchMounts = ref([mount('a-1')])
+    const scope = effectScope()
+    scope.run(() => useFeatureMountLifecycle(bus, launchMounts))
+    await nextTick()
+
+    expect(bus.log.filter((row) => row.event === FeatureEvents.widgetMounting)).toHaveLength(1)
+
+    launchMounts.value = []
+    await nextTick()
+    expect(bus.log.filter((row) => row.event === FeatureEvents.widgetUnmounting)).toHaveLength(1)
+    scope.stop()
+  })
+
+  it('tracks instance registry through ready and error', async () => {
+    const bus = createTestBus()
+    const launchMounts = ref([mount('g-1', 'chart', 'app-chart')])
+    const scope = effectScope()
+    const { allInstancesSettled, hasInstanceErrors } = scope.run(() =>
+      useFeatureInstanceRegistry(bus, launchMounts),
+    )!
+
+    bus.emit(FeatureEvents.widgetReady, { instanceId: 'g-1' })
+    await nextTick()
+    expect(allInstancesSettled.value).toBe(true)
+    expect(hasInstanceErrors.value).toBe(false)
+
+    bus.emit(FeatureEvents.widgetError, { instanceId: 'g-1' })
+    await nextTick()
+    expect(hasInstanceErrors.value).toBe(true)
+    scope.stop()
+  })
+
+  it('broadcasts host context changes on the bus', async () => {
+    const bus = createTestBus()
+    const hostContext = ref<{ lockerSlug: string } | null>(null)
+    const scope = effectScope()
+    scope.run(() =>
+      useBroadcastHostContext(hostContext, bus, {
+        extra: (ctx) => ({ lockerSlug: ctx.lockerSlug }),
+      }),
+    )
+
+    hostContext.value = { lockerSlug: 'demo' }
+    await nextTick()
+
+    expect(bus.log.at(-1)).toMatchObject({
+      event: FeatureEvents.hostContextChanged,
+      payload: {
+        hostContext: { lockerSlug: 'demo' },
+        lockerSlug: 'demo',
+      },
+    })
+    scope.stop()
+  })
+})

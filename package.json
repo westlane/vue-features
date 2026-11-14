@@ -1,0 +1,67 @@
+{
+  "name": "@westlane/vue-features",
+  "version": "0.1.0",
+  "description": "Entitled Vue feature mounts — lazy load, custom elements, launch-once lifecycle",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/westlane/vue-features.git"
+  },
+  "homepage": "https://github.com/westlane/vue-features#readme",
+  "bugs": {
+    "url": "https://github.com/westlane/vue-features/issues"
+  },
+  "keywords": [
+    "vue",
+    "features",
+    "entitled",
+    "lazy-load",
+    "custom-elements",
+    "mount"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./dev": {
+      "types": "./dist/dev/index.d.ts",
+      "import": "./dist/dev/index.js"
+    },
+    "./lab-vite": {
+      "types": "./dist/lab-vite.d.ts",
+      "import": "./dist/lab-vite.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "prepublishOnly": "yarn build && yarn test && yarn typecheck"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.4",
+    "@vue/compiler-dom": "^3.5.13",
+    "@vue/test-utils": "^2.4.6",
+    "happy-dom": "^17.4.4",
+    "tsup": "^8.5.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5",
+    "vitest": "^3.2.4",
+    "vue": "^3.5.13"
+  },
+  "resolutions": {
+    "vite": "^6.3.5"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
