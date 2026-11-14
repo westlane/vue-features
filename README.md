@@ -1,104 +1,128 @@
-# `@westlane/vue-features`
+# vue-features
 
 Entitled Vue feature mounts — lazy-load product UI only when allowed, register custom elements once, and freeze launch props.
 
-> Package A in the westlane stack: **feature mounts**. Personalization (flags, Clerk, segments) and json-render generative UI are separate packages that plug into this registry.
+Three roles:
+
+| Role | Use |
+| --- | --- |
+| **Widget** | `useFeatureRuntime` / `createEntitledFeature` inside the feature |
+| **Host** | entitle → load → mount list → bus lifecycle |
+| **Lab** | `@westlane/vue-features/dev` (+ optional `./lab-vite`) |
+
 
 ## Install
 
 ```bash
 yarn add @westlane/vue-features
-# peer: vue ^3.5
+#or
+npm install @westlane/vue-features
 ```
 
-## Quick start
+Peer: `vue ^3.5`
 
-### Entitled lazy component
+
+## Usage
+
+
+### Entitled SFC
 
 ```ts
-import { createEntitledFeature } from '@westlane/vue-features'
+import { createEntitledFeature } from "@westlane/vue-features";
 
-const Chart = createEntitledFeature({
-  loader: () => import('./ChartPanel.vue'),
-})
+const Vote = createEntitledFeature({
+  loader: () => import("./VotePanel.vue"),
+});
 ```
 
 ```vue
-<Chart :entitled="canUseCharts" :spec="chartSpec" />
+<Vote :entitled="canUseVote" :spec="voteSpec" />
 ```
 
-The dynamic `loader` runs only when `entitled === true`, so ungated users never download the chunk.
 
-### Custom element registry
+### Custom elements
 
 ```ts
-import { loadFeatureElements, type FeatureEventBus } from '@westlane/vue-features'
+import { loadFeatureElements } from "@westlane/vue-features";
 
 await loadFeatureElements(
-  [{ key: 'chart', tag: 'app-chart', load: () => import('./chart.ce') }],
+  [{ key: "vote", tag: "app-vote", load: () => import("./vote.ce") }],
   bus,
-)
+);
 ```
 
-### Allowlisted registry (generative UI hosts)
+
+### Widget runtime
 
 ```ts
-import { createFeatureRegistry, defineFeatureEntry } from '@westlane/vue-features'
+import { useFeatureRuntime } from "@westlane/vue-features";
+
+const { spec, hostContext, reportReady, emitSignal } = useFeatureRuntime(props);
+```
+
+
+### Lab host
+
+```ts
+import { mountDevFeatureHost } from "@westlane/vue-features/dev";
+
+mountDevFeatureHost(VoteCE, {
+  tag: "app-vote",
+  featureKey: "vote",
+  instanceId: "vote-1",
+  spec: {},
+  hostContext: {},
+  title: "Vote lab",
+});
+```
+
+Runnable demo (`examples/vue-vite`): `yarn demo` — entitled Vote with Tailwind (port 5190).
+
+
+## Advanced
+
+
+### Allowlisted registry
+
+```ts
+import { createFeatureRegistry, defineFeatureEntry } from "@westlane/vue-features";
 
 const registry = createFeatureRegistry([
   {
-    key: 'chart',
+    key: "vote",
     load: async () =>
       defineFeatureEntry({
-        mount(el, props) {
-          /* createApp(...).mount(el) */
-        },
-        unmount(el) {
-          /* teardown */
-        },
+        mount(el, props) { /* … */ },
+        unmount(el) { /* … */ },
       }),
   },
-])
+]);
 
-// Agent may only request keys present in the registry
-registry.get('chart') // ok
-registry.get('evil') // undefined — do not load
+registry.get("vote"); // ok
+registry.get("evil"); // undefined
 ```
 
-### Launch-once + lifecycle
+
+### Host helpers
 
 ```ts
-import { useFeatureRuntime } from '@westlane/vue-features'
-
-const { spec, hostContext, reportReady, emitSignal } = useFeatureRuntime(props)
+import {
+  filterEntitledFeatures,
+  loadEntitledFeatures,
+  useFeatureMountLifecycle,
+  useFeatureLaunchSnapshots,
+} from "@westlane/vue-features";
 ```
 
-## API
+Inject your own `has()` (Clerk, GrowthBook, …). Not a feature-flag SDK.
 
-| Export | Role |
-| --- | --- |
-| `createEntitledFeature` | Gate + `defineAsyncComponent` |
-| `defineFeatureEntry` | `mount` / `unmount` / `update` contract |
-| `registerFeatureElement` / `loadFeatureElements` / `loadEntitledFeatures` | CE define-once + chunk events |
-| `filterEntitledFeatures` / `mergeFeatureHas` | Host entitlement filter (inject `has`) |
-| `resolveFeatureMount` / `findFeatureEntry` | Instance → mount props |
-| `createFeatureRegistry` | Allowlisted feature keys |
-| `useLaunchOnce` | Freeze launch props |
-| `useFeatureLifecycle` | Widget ready / error / disposed |
-| `useFeatureMountLifecycle` | Host mount list → mounting / unmounting |
-| `useFeatureInstanceRegistry` | Host instance state from bus events |
-| `useFeatureLaunchSnapshots` | Freeze launch props per instance id |
-| `useBroadcastHostContext` | Push live host context on the bus |
-| `useFeatureRuntime` | Launch + live host context + signals |
-| `FeatureEvents` | Default event name constants |
-| `@westlane/vue-features/dev` | Lab host + in-memory bus |
-| `@westlane/vue-features/lab-vite` | Shared Vite config for CE labs |
 
-## Design notes
+### Vite lab config
 
-- **Not a feature-flag SDK** — pass `entitled: boolean` from Clerk, LaunchDarkly, GrowthBook, ConfigCat, etc.
-- **Not qiankun / MFE** — same-origin Vue chunks; optional remote `load()` is your choice.
-- **Not `@baleada/vue-features`** — that package is UI composables; this one is product feature mounts.
+```ts
+import { createFeatureLabViteConfig } from "@westlane/vue-features/lab-vite";
+```
+
 
 ## Scripts
 
@@ -106,8 +130,14 @@ const { spec, hostContext, reportReady, emitSignal } = useFeatureRuntime(props)
 yarn install
 yarn test
 yarn typecheck
+yarn lint
+yarn demo        # examples/vue-vite lab on :5190
+yarn run check   # lint + typecheck + test + build
 yarn build
 ```
+
+Hooks: **pre-commit** lint-staged; **pre-push** typecheck + test.
+
 
 ## License
 
