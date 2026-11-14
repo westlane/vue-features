@@ -30,4 +30,10 @@ describe('filterEntitledFeatures', () => {
     expect(has({ feature: 'graphs' })).toBe(true)
     expect(has({ feature: 'geo_export' })).toBe(false)
   })
+
+  it('filters by plan entitlement', () => {
+    const registry = [{ key: 'pro', entitlement: { plan: 'scale' } }] as const
+    const entitled = filterEntitledFeatures(registry, (params) => params.plan === 'scale')
+    expect(entitled.map((row) => row.key)).toEqual(['pro'])
+  })
 })
