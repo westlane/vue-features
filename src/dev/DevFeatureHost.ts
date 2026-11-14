@@ -1,15 +1,7 @@
 import { computed, defineComponent, h, shallowRef, type PropType } from 'vue'
+import { cloneValue } from '../clone-value'
 import { createDevFeatureEventBus } from './create-dev-event-bus'
 
-function freeze<T>(value: T): T {
-  try {
-    return structuredClone(value)
-  } catch {
-    return JSON.parse(JSON.stringify(value)) as T
-  }
-}
-
-/** Minimal standalone host for local CE feature labs. */
 export const DevFeatureHost = defineComponent({
   name: 'DevFeatureHost',
   props: {
@@ -21,8 +13,8 @@ export const DevFeatureHost = defineComponent({
     title: { type: String, required: true },
   },
   setup(props, { slots }) {
-    const launchSpec = shallowRef(freeze(props.spec))
-    const liveHostContext = shallowRef(freeze(props.hostContext))
+    const launchSpec = shallowRef(cloneValue(props.spec))
+    const liveHostContext = shallowRef(cloneValue(props.hostContext))
     const bus = createDevFeatureEventBus()
 
     const signalLines = computed(() =>
@@ -34,7 +26,7 @@ export const DevFeatureHost = defineComponent({
     )
 
     function setHostContext(next: unknown): void {
-      liveHostContext.value = freeze(next)
+      liveHostContext.value = cloneValue(next)
       bus.emitHostContextChanged(liveHostContext.value)
     }
 
@@ -42,11 +34,7 @@ export const DevFeatureHost = defineComponent({
       h('div', { class: 'vf-lab' }, [
         h('header', { class: 'vf-lab__header' }, [
           h('h1', { class: 'vf-lab__title' }, props.title),
-          h(
-            'p',
-            { class: 'vf-lab__hint' },
-            'Standalone feature lab — not shipped in production builds.',
-          ),
+          h('p', { class: 'vf-lab__hint' }, 'Standalone feature lab'),
         ]),
         h('div', { class: 'vf-lab__layout' }, [
           h('section', { class: 'vf-lab__panel', 'aria-label': 'Host controls' }, [

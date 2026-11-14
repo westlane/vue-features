@@ -17,7 +17,6 @@ export function filterEntitledFeatures<T extends { entitlement: FeatureEntitleme
   return registry.filter((entry) => isFeatureEntitled(entry.entitlement, has))
 }
 
-/** OR-merge entitlement sources (flags + billing + env). */
 export function mergeFeatureHas(checks: FeatureHas[]): FeatureHas {
   return (params) => checks.some((check) => check(params))
 }

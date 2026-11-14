@@ -9,11 +9,9 @@ export type MountDevFeatureHostOptions = {
   hostContext: unknown
   title: string
   mountSelector?: string
-  /** Optional controls rendered in the host panel. */
   controls?: Component
 }
 
-/** Register CE (once) and mount the generic feature lab host. */
 export function mountDevFeatureHost(
   customElement: CustomElementConstructor | Component,
   options: MountDevFeatureHostOptions,

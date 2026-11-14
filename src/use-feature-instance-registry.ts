@@ -22,7 +22,6 @@ type InstanceRecord = {
   state: FeatureInstanceState
 }
 
-/** Host-side: track per-instance state from lifecycle bus events. */
 export function useFeatureInstanceRegistry(
   bus: FeatureEventBus,
   launchMounts: Ref<readonly FeatureMount[]>,

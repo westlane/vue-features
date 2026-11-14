@@ -8,7 +8,6 @@ export type UseFeatureMountLifecycleOptions = {
   }
 }
 
-/** Host-side: emit mounting / unmounting as the launch list diffs. */
 export function useFeatureMountLifecycle(
   bus: FeatureEventBus,
   launchMounts: Ref<readonly FeatureMount[]>,

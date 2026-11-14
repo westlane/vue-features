@@ -1,4 +1,4 @@
-import { onBeforeUnmount, ref, watch, type ShallowRef } from 'vue'
+import { getCurrentScope, onScopeDispose, ref, watch, type ShallowRef } from 'vue'
 import { FeatureEvents, type FeatureEventBus, type FeatureWidgetErrorPhase } from './types'
 
 export type UseFeatureLifecycleOptions = {
@@ -90,7 +90,9 @@ export function useFeatureLifecycle(
     })
   }
 
-  onBeforeUnmount(() => reportDisposed())
+  if (getCurrentScope()) {
+    onScopeDispose(() => reportDisposed())
+  }
 
   return { reportReady, reportError, reportDisposed }
 }

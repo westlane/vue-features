@@ -1,3 +1,4 @@
+import { reactive } from 'vue'
 import { FeatureEvents, type FeatureEventBus } from '../types'
 
 type Handler = (data: unknown) => void
@@ -9,7 +10,7 @@ export type DevFeatureEventBus = FeatureEventBus & {
 
 export function createDevFeatureEventBus(): DevFeatureEventBus {
   const handlers = new Map<string, Set<Handler>>()
-  const signalLog: Array<Record<string, unknown>> = []
+  const signalLog = reactive<Array<Record<string, unknown>>>([])
 
   const bus: DevFeatureEventBus = {
     signalLog,

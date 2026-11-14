@@ -1,29 +1,21 @@
 import { watch, type Ref } from 'vue'
+import { cloneValue } from './clone-value'
 import { FeatureEvents, type FeatureEventBus } from './types'
-
-function defaultClone<T>(value: T): T {
-  try {
-    return structuredClone(value)
-  } catch {
-    return JSON.parse(JSON.stringify(value)) as T
-  }
-}
 
 export type UseBroadcastHostContextOptions<THostContext> = {
   event?: string
   clone?: (ctx: THostContext) => THostContext
-  /** Extra payload fields (e.g. Fieldwise `lockerSlug`). */
   extra?: (ctx: THostContext) => Record<string, unknown>
 }
 
-/** Host-side: push live host context onto the feature bus. */
+/** Push live host context onto the feature bus. */
 export function useBroadcastHostContext<THostContext>(
   hostContext: Ref<THostContext | null | undefined>,
   bus: FeatureEventBus,
   options: UseBroadcastHostContextOptions<THostContext> = {},
 ): void {
   const event = options.event ?? FeatureEvents.hostContextChanged
-  const clone = options.clone ?? defaultClone
+  const clone = options.clone ?? cloneValue
 
   watch(
     hostContext,

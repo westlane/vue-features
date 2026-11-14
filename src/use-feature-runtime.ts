@@ -1,4 +1,12 @@
-import { onBeforeUnmount, shallowRef, watch, watchEffect, type ShallowRef } from 'vue'
+import {
+  getCurrentScope,
+  onScopeDispose,
+  shallowRef,
+  watch,
+  watchEffect,
+  type ShallowRef,
+} from 'vue'
+import { cloneValue } from './clone-value'
 import { FeatureEvents, type FeatureEventBus } from './types'
 import { useFeatureLifecycle } from './use-feature-lifecycle'
 import { useLaunchOnce } from './use-launch-once'
@@ -9,12 +17,15 @@ function useFeatureEventBus(props: {
 }): ShallowRef<FeatureEventBus | undefined> {
   const bus = shallowRef<FeatureEventBus>()
   watchEffect(() => {
-    const next = props.eventBus ?? props.getGlobalBus?.() ?? undefined
-    if (next) bus.value = next
+    bus.value = props.eventBus ?? props.getGlobalBus?.()
   })
   return bus
 }
 
+/**
+ * Launch-frozen hostContext, then live updates from the bus.
+ * Prop updates are ignored after the first launch snapshot.
+ */
 function useLiveHostContext<THostContext>(
   launchHostContext: ShallowRef<THostContext | undefined>,
   bus: ShallowRef<FeatureEventBus | undefined>,
@@ -23,15 +34,20 @@ function useLiveHostContext<THostContext>(
   cloneHostContext: (ctx: THostContext) => THostContext,
 ): ShallowRef<THostContext | undefined> {
   const hostContext = shallowRef<THostContext>()
+  let launched = false
   let unsubscribe: (() => void) | undefined
-  let propsFrozen = false
+
+  function apply(ctx: THostContext | undefined): void {
+    if (ctx) hostContext.value = cloneHostContext(ctx)
+  }
 
   watch(
     launchHostContext,
     (ctx) => {
-      if (ctx) {
-        propsFrozen = true
-        if (!hostContext.value) hostContext.value = cloneHostContext(ctx)
+      if (!ctx) return
+      if (!launched) {
+        launched = true
+        apply(ctx)
       }
     },
     { immediate: true },
@@ -40,8 +56,7 @@ function useLiveHostContext<THostContext>(
   watch(
     liveHostContextProp,
     (ctx) => {
-      if (propsFrozen) return
-      if (ctx) hostContext.value = cloneHostContext(ctx)
+      if (!launched) apply(ctx)
     },
     { deep: true, immediate: true },
   )
@@ -54,7 +69,7 @@ function useLiveHostContext<THostContext>(
       if (!eventBus) return
       const onContext = (payload: unknown) => {
         const row = payload as { hostContext?: THostContext }
-        if (row.hostContext) hostContext.value = cloneHostContext(row.hostContext)
+        if (row.hostContext) apply(row.hostContext)
       }
       eventBus.on(contextChangedEvent, onContext)
       unsubscribe = () => eventBus.off(contextChangedEvent, onContext)
@@ -62,17 +77,9 @@ function useLiveHostContext<THostContext>(
     { immediate: true },
   )
 
-  onBeforeUnmount(() => unsubscribe?.())
+  if (getCurrentScope()) onScopeDispose(() => unsubscribe?.())
 
   return hostContext
-}
-
-function defaultClone<T>(value: T): T {
-  try {
-    return structuredClone(value)
-  } catch {
-    return JSON.parse(JSON.stringify(value)) as T
-  }
 }
 
 export type UseFeatureRuntimeOptions<THostContext = unknown> = {
@@ -103,14 +110,13 @@ export function useFeatureRuntime<THostContext = unknown>(
     bus,
     () => props.hostContext,
     options.contextChangedEvent ?? FeatureEvents.hostContextChanged,
-    options.cloneHostContext ?? defaultClone,
+    options.cloneHostContext ?? cloneValue,
   )
   const { reportReady, reportError, reportDisposed } = useFeatureLifecycle(props, bus)
 
   function emitSignal(signal: string, detail?: Record<string, unknown>): void {
     const eventBus = bus.value
-    const instanceId = props.instanceId
-    const featureKey = props.featureKey
+    const { instanceId, featureKey } = props
     if (!eventBus || !instanceId || !featureKey) return
     eventBus.emit(options.signalEvent ?? FeatureEvents.widgetSignal, {
       instanceId,

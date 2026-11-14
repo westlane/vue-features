@@ -1,18 +1,7 @@
 import { shallowRef, watch, type ShallowRef } from 'vue'
+import { cloneValue } from './clone-value'
 
-function cloneValue<T>(value: T): T {
-  try {
-    return structuredClone(value)
-  } catch {
-    return JSON.parse(JSON.stringify(value)) as T
-  }
-}
-
-/**
- * Captures launch params once; ignores later host updates.
- * Spec-only widgets (no `hostContext` on props) capture as soon as `spec` is set.
- * Widgets that declare `hostContext` wait until both `spec` and `hostContext` are present.
- */
+/** Capture launch props once; ignore later host updates. */
 export function useLaunchOnce<THostContext = unknown>(props: {
   spec?: unknown
   hostContext?: THostContext

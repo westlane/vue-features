@@ -21,7 +21,6 @@ export type RegisterFeatureElementOptions = {
   }
 }
 
-/** Define a feature CE once; emits chunk load events on the host bus. */
 export async function registerFeatureElement(
   entry: FeatureCustomElementEntry,
   bus: FeatureEventBus,
@@ -59,7 +58,6 @@ export async function registerFeatureElement(
   }
 }
 
-/** Opportunistically register every feature CE in parallel. */
 export async function loadFeatureElements(
   entries: readonly FeatureCustomElementEntry[],
   bus: FeatureEventBus,
@@ -68,7 +66,6 @@ export async function loadFeatureElements(
   await Promise.all(entries.map((entry) => registerFeatureElement(entry, bus, options)))
 }
 
-/** Filter by entitlement, then register CE chunks. */
 export async function loadEntitledFeatures<
   T extends FeatureCustomElementEntry & { entitlement: FeatureEntitlement },
 >(
