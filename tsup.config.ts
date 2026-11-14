@@ -7,8 +7,12 @@ export default defineConfig({
     'lab-vite': 'src/vite.ts',
   },
   format: ['esm'],
+  target: 'es2022',
   dts: true,
-  sourcemap: true,
+  sourcemap: false,
+  minify: true,
+  treeshake: true,
   clean: true,
+  splitting: true,
   external: ['vue', 'vite', '@vitejs/plugin-vue'],
 })
