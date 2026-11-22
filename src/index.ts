@@ -2,6 +2,7 @@ export {
   createEntitledFeature,
   type CreateEntitledFeatureOptions,
 } from './create-entitled-feature'
+export { createLazyNamedExport } from './create-lazy-named-export'
 export { defineFeatureEntry, type DefineFeatureEntryOptions } from './define-feature-entry'
 export {
   registerFeatureElement,
@@ -15,6 +16,10 @@ export {
   isFeatureEntitled,
   mergeFeatureHas,
 } from './filter-entitled-features'
+export { combineFeatureHas } from './feature-has'
+export { createAllowlistFeatureHas } from './allowlist-feature-has'
+export { resolveEntitlementHas, type EntitlementController } from './entitlement-controllers'
+export { useFeatureEntitled } from './use-feature-entitled'
 export {
   findFeatureEntry,
   resolveFeatureMount,
@@ -48,9 +53,15 @@ export {
   type UseBroadcastHostContextOptions,
 } from './use-broadcast-host-context'
 export {
+  useResolvedFeatureMounts,
+  type EntitledFeatureRegistryEntry,
+  type UseResolvedFeatureMountsOptions,
+} from './use-resolved-feature-mounts'
+export {
   createFeatureRegistry,
   type FeatureRegistry,
 } from './create-feature-registry'
+export { cloneValue } from './clone-value'
 export {
   FeatureEvents,
   type FeatureEventBus,

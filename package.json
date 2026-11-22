@@ -1,6 +1,6 @@
 {
   "name": "@westlane/vue-features",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Entitled Vue feature mounts — lazy load, custom elements, launch-once lifecycle",
   "type": "module",
   "sideEffects": false,
@@ -63,10 +63,10 @@
     "vue": "^3.5.0"
   },
   "peerDependenciesMeta": {
-    "vite": {
+    "@vitejs/plugin-vue": {
       "optional": true
     },
-    "@vitejs/plugin-vue": {
+    "vite": {
       "optional": true
     }
   },
