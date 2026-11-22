@@ -53,7 +53,7 @@
     "lint:fix": "eslint . --fix --max-warnings 0",
     "check": "yarn lint && yarn typecheck && yarn test && yarn build",
     "demo": "vite --config examples/vue-vite/vite.config.ts",
-    "prepublishOnly": "yarn check",
+    "prepublishOnly": "yarn run check",
     "prepare": "husky",
     "lint-staged": "lint-staged"
   },
