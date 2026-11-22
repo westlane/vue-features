@@ -1,6 +1,6 @@
 {
   "name": "@westlane/vue-features",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Entitled Vue feature mounts — lazy load, custom elements, launch-once lifecycle",
   "type": "module",
   "sideEffects": false,
@@ -53,7 +53,7 @@
     "lint:fix": "eslint . --fix --max-warnings 0",
     "check": "yarn lint && yarn typecheck && yarn test && yarn build",
     "demo": "vite --config examples/vue-vite/vite.config.ts",
-    "prepublishOnly": "yarn check",
+    "prepublishOnly": "yarn run check",
     "prepare": "husky",
     "lint-staged": "lint-staged"
   },
@@ -63,10 +63,10 @@
     "vue": "^3.5.0"
   },
   "peerDependenciesMeta": {
-    "vite": {
+    "@vitejs/plugin-vue": {
       "optional": true
     },
-    "@vitejs/plugin-vue": {
+    "vite": {
       "optional": true
     }
   },
@@ -75,6 +75,7 @@
     "@tailwindcss/vite": "^4.3.5",
     "@vitejs/plugin-vue": "^6.0.4",
     "@vue/compiler-dom": "^3.5.13",
+    "@vue/server-renderer": "^3.5.13",
     "@vue/test-utils": "^2.4.6",
     "eslint": "^9.28.0",
     "globals": "^16.2.0",
@@ -100,6 +101,7 @@
   "engines": {
     "node": ">=20"
   },
+  "packageManager": "yarn@1.22.22",
   "publishConfig": {
     "access": "public",
     "registry": "https://npm.pkg.github.com"

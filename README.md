@@ -28,7 +28,7 @@ Peer: `vue ^3.5`
 ### Entitled SFC
 
 ```ts
-import { createEntitledFeature } from "@westlane/vue-features";
+import { createEntitledFeature, createLazyNamedExport } from "@westlane/vue-features";
 
 const Vote = createEntitledFeature({
   loader: () => import("./VotePanel.vue"),
@@ -107,14 +107,39 @@ registry.get("evil"); // undefined
 
 ```ts
 import {
+  createAllowlistFeatureHas,
+  createLazyNamedExport,
   filterEntitledFeatures,
   loadEntitledFeatures,
+  resolveEntitlementHas,
+  useFeatureEntitled,
   useFeatureMountLifecycle,
   useFeatureLaunchSnapshots,
+  useResolvedFeatureMounts,
 } from "@westlane/vue-features";
 ```
 
-Inject your own `has()` (Clerk, GrowthBook, …). Not a feature-flag SDK.
+Hosts that must not statically import feature packages use {@link createLazyNamedExport}. CE layout hosts resolve entitled mounts with {@link useResolvedFeatureMounts}.
+
+Wire billing in the host app — vue-features only merges {@link EntitlementController}s.
+
+```ts
+const featureHas = computed(() =>
+  resolveEntitlementHas([
+    {
+      id: "billing",
+      enabled: () => signedIn.value,
+      resolve: () => (params) => (params.feature ? billing.value({ feature: params.feature }) : false),
+    },
+    {
+      id: "allowlist",
+      resolve: () => createAllowlistFeatureHas(import.meta.env.VITE_FEATURE_ALLOWLIST),
+    },
+  ]),
+);
+
+const canExport = useFeatureEntitled({ feature: "geo_export" }, featureHas);
+```
 
 
 ### Vite lab config
