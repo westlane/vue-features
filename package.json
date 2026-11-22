@@ -75,6 +75,7 @@
     "@tailwindcss/vite": "^4.3.5",
     "@vitejs/plugin-vue": "^6.0.4",
     "@vue/compiler-dom": "^3.5.13",
+    "@vue/server-renderer": "^3.5.13",
     "@vue/test-utils": "^2.4.6",
     "eslint": "^9.28.0",
     "globals": "^16.2.0",
@@ -100,6 +101,7 @@
   "engines": {
     "node": ">=20"
   },
+  "packageManager": "yarn@1.22.22",
   "publishConfig": {
     "access": "public",
     "registry": "https://npm.pkg.github.com"
